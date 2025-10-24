@@ -1,6 +1,9 @@
+// src/app/auth/login/page.tsx
 "use client";
+
 import { useState } from "react";
 import api from "@/lib/axios";
+import { setTokens } from "@/lib/auth";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -8,18 +11,33 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setError("");
     try {
       const formData = new FormData();
-      formData.append("username", form.email);
+      formData.append("username", form.email); // OAuth2PasswordRequestForm expects username/password
       formData.append("password", form.password);
+
       const res = await api.post("/auth/login", formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
-      localStorage.setItem("access_token", res.data.access_token);
+
+      // Expect backend to return { access_token, refresh_token }
+      const access = res.data.access_token;
+      const refresh = res.data.refresh_token;
+
+      if (!access) {
+        setError("Login failed: no token returned");
+        return;
+      }
+
+      // Save both tokens
+      setTokens(access, refresh);
+
+      // redirect to dashboard (or home)
       window.location.href = "/dashboard";
     } catch (err: any) {
       console.error(err);
-      setError("Invalid credentials");
+      setError(err?.response?.data?.detail || "Invalid credentials");
     }
   };
 
@@ -31,12 +49,14 @@ export default function LoginPage() {
         <input
           type="email"
           placeholder="Email"
+          className="border p-2 rounded"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
         <input
           type="password"
           placeholder="Password"
+          className="border p-2 rounded"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />

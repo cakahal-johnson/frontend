@@ -4,39 +4,38 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import FavoritesGroup from "./FavoritesGroup";
 import Navbar from "@/components/Navbar";
+import { FavoriteResponse } from "@/types/favorite";
 
 export default function FavoritesPage() {
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState<FavoriteResponse[]>([]);
   const [groupBy, setGroupBy] = useState<"category" | "agent">("category");
 
   useEffect(() => {
-  const fetchFavorites = async () => {
-    const token = localStorage.getItem("access_token");
+    const fetchFavorites = async () => {
+      const token = localStorage.getItem("access_token");
 
-    if (!token) {
-      console.warn("No token -> skipping favorites fetch");
-      setFavorites([]);  // ✅ prevents errors
-      return;
-    }
+      if (!token) return setFavorites([]);
 
-    try {
-      const res = await api.get("/favorites/"); // ✅ has trailing slash
-      setFavorites(res.data);
-    } catch (err: any) {
-      console.error("Failed to fetch favorites:", err.message);
-    }
-  };
+      try {
+        const res = await api.get("/favorites/");
+        setFavorites(res.data);
+      } catch (err: any) {
+        console.error("Failed to fetch favorites:", err.message);
+      }
+    };
 
-  fetchFavorites();
-}, []);
+    fetchFavorites();
+  }, []);
 
-  const groupedFavorites = favorites.reduce((acc: any, fav: any) => {
+  const groupedFavorites = favorites.reduce((acc: Record<string, FavoriteResponse[]>, fav) => {
     const key =
       groupBy === "category"
-        ? fav.listing.category
-        : fav.listing.agent.name;
-    acc[key] = acc[key] || [];
+        ? fav.listing?.category ?? "Uncategorized"
+        : fav.listing?.agent?.name ?? "Unknown Agent";
+
+    if (!acc[key]) acc[key] = [];
     acc[key].push(fav);
+
     return acc;
   }, {});
 
@@ -48,6 +47,7 @@ export default function FavoritesPage() {
           <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
             Favorites Dashboard
           </h1>
+
           <select
             className="px-3 py-2 rounded border bg-white dark:bg-gray-800 dark:text-gray-200"
             value={groupBy}
