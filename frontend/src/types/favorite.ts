@@ -1,3 +1,4 @@
+// src/types/favorite.ts
 export interface FavoriteResponse {
   id: number;
   listing_id: number;
