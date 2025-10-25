@@ -113,7 +113,7 @@ export default function HomePage() {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
           <button
-            onClick={() => router.push("/dashboard/buyer")}
+            onClick={() => router.push("/dashboard/orders")}
             className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded-lg shadow-md transition-all duration-200"
           >
             Explore Listings
@@ -182,7 +182,7 @@ export default function HomePage() {
                     ref={isLast ? lastListingRef : null}
                     whileHover={{ scale: 1.03 }}
                     className="bg-gray-50 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer"
-                    onClick={() => router.push(`/dashboard/buyer?listing=${listing.id}`)}
+                    onClick={() => router.push(`/dashboard/orders?listing=${listing.id}`)}
                   >
                     <Image
                       src={listing.image_url || "/window.svg"}

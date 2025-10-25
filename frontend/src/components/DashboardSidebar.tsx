@@ -17,7 +17,7 @@ export default function DashboardSidebar() {
   }, []);
 
   const buyerLinks = [
-    { href: "/dashboard/buyer", label: "My Purchases", icon: ShoppingBag },
+    { href: "/dashboard/orders", label: "My Purchases", icon: ShoppingBag },
     { href: "/dashboard/favorites", label: "Favorites", icon: Heart },
     { href: "/listings", label: "Browse Listings", icon: List },
   ];

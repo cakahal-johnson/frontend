@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
 import ScrollNav from "@/components/ScrollNav";
+import { getImageUrl } from "@/lib/getImageUrl";
 
 export default function ListingDetailsPage() {
   const params = useParams();
@@ -20,7 +21,6 @@ export default function ListingDetailsPage() {
     if (listing?.images?.length) setLightboxIndex(i);
   };
   const closeLightbox = () => setLightboxIndex(null);
-
   const nextImage = () => {
     if (!listing?.images?.length) return;
     setLightboxIndex((prev) =>
@@ -68,7 +68,7 @@ export default function ListingDetailsPage() {
       >
         {listing.main_image ? (
           <img
-            src={listing.main_image}
+            src={getImageUrl(listing.main_image)}
             alt={listing.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -110,7 +110,7 @@ export default function ListingDetailsPage() {
           </button>
 
           <img
-            src={listing.images[lightboxIndex]}
+            src={getImageUrl(listing.images[lightboxIndex])}
             className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg shadow-lg"
             alt={`Lightbox image ${lightboxIndex + 1}`}
           />
@@ -138,35 +138,34 @@ export default function ListingDetailsPage() {
           </section>
 
           {/* Gallery Section */}
-        {listing.images?.length > 1 && (
-        <section id="gallery" className="py-8 scroll-mt-24">
-            <h2 className="text-2xl font-bold mb-3">Gallery</h2>
-            <div className="columns-2 md:columns-3 gap-3 space-y-3">
-            {listing.images.map((img: string, i: number) => (
-                <div
-                key={i}
-                className="group relative w-full overflow-hidden rounded-lg cursor-pointer"
-                onClick={() => openLightbox(i)}
-                >
-                <img
-                    src={img}
-                    alt={`Gallery image ${i + 1}`}
-                    className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+          {listing.images?.length > 1 && (
+            <section id="gallery" className="py-8 scroll-mt-24">
+              <h2 className="text-2xl font-bold mb-3">Gallery</h2>
+              <div className="columns-2 md:columns-3 gap-3 space-y-3">
+                {listing.images.map((img: string, i: number) => (
+                  <div
+                    key={i}
+                    className="group relative w-full overflow-hidden rounded-lg cursor-pointer"
+                    onClick={() => openLightbox(i)}
+                  >
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`Gallery image ${i + 1}`}
+                      className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
 
-                {/* 🔍 Hover Overlay */}
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-white text-3xl mb-1">🔍</span>
-                    <span className="text-white font-semibold text-sm tracking-wide">
-                    View Image
-                    </span>
-                </div>
-                </div>
-            ))}
-            </div>
-        </section>
-        )}
-
+                    {/* 🔍 Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="text-white text-3xl mb-1">🔍</span>
+                      <span className="text-white font-semibold text-sm tracking-wide">
+                        View Image
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Map Section */}
           <section id="map" className="py-8 scroll-mt-24">
@@ -194,6 +193,15 @@ export default function ListingDetailsPage() {
           </p>
           <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
             Contact Agent
+          </button>
+
+          {/* ✅ Back Button - subtle floating CTA */}
+          <button
+            onClick={() => window.history.back()}
+            className="fixed top-20 left-6 z-[100] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md text-gray-700 dark:text-gray-200 
+              px-4 py-2 rounded-full hover-lift-glow flex items-center gap-2"
+          >
+            ← Back
           </button>
 
           {listing.agent && (
