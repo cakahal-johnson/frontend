@@ -4,28 +4,39 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
+import ScrollNav from "@/components/ScrollNav";
 
 export default function ListingDetailsPage() {
   const params = useParams();
-  const id = Number(params.id);
+  const id = params?.id ? Number(params.id) : null;
+
   const [listing, setListing] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Lightbox
+  // ✅ Lightbox state
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const openLightbox = (i: number) => setLightboxIndex(i);
+
+  const openLightbox = (i: number) => {
+    if (listing?.images?.length) setLightboxIndex(i);
+  };
   const closeLightbox = () => setLightboxIndex(null);
-  const nextImage = () =>
+
+  const nextImage = () => {
+    if (!listing?.images?.length) return;
     setLightboxIndex((prev) =>
       prev !== null ? (prev + 1) % listing.images.length : null
     );
-  const prevImage = () =>
+  };
+  const prevImage = () => {
+    if (!listing?.images?.length) return;
     setLightboxIndex((prev) =>
       prev !== null
         ? (prev - 1 + listing.images.length) % listing.images.length
         : null
     );
+  };
 
+  // ✅ Fetch Listing
   useEffect(() => {
     if (!id) return;
     const fetchDetails = async () => {
@@ -45,37 +56,44 @@ export default function ListingDetailsPage() {
   if (!listing) return <p className="text-center py-10">Listing not found.</p>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10">
-      {/* ✅ HERO IMAGE + Favorite Btn */}
-      <div className="relative h-96 w-full rounded-xl overflow-hidden shadow">
-        <img
-          src={listing.main_image}
-          alt={listing.title}
-          className="w-full h-full object-cover cursor-pointer"
-          onClick={() => openLightbox(0)}
-        />
+    <div className="relative max-w-7xl mx-auto space-y-10 px-4">
+      {/* ✅ Floating scroll navigation */}
+      <ScrollNav />
 
+      {/* ✅ HERO IMAGE + Favorite Btn + Hover Overlay */}
+      <div
+        id="overview"
+        className="group relative h-96 w-full rounded-xl overflow-hidden shadow cursor-pointer"
+        onClick={() => openLightbox(0)} // ✅ Lightbox trigger
+      >
+        {listing.main_image ? (
+          <img
+            src={listing.main_image}
+            alt={listing.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+            No image available
+          </div>
+        )}
+
+        {/* ❤️ Favorite Button */}
         <button className="absolute top-4 right-4 bg-white p-3 rounded-full shadow hover:scale-105 transition">
           ❤️
         </button>
+
+        {/* 🔍 Hover Overlay */}
+        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="text-white text-5xl mb-2">🔍</span>
+          <span className="text-white font-semibold text-lg tracking-wide">
+            View Image
+          </span>
+        </div>
       </div>
 
-      {/* ✅ Masonry Gallery */}
-      {listing.images?.length > 0 && (
-        <div className="columns-2 md:columns-3 gap-3 space-y-3">
-          {listing.images.map((img: string, i: number) => (
-            <img
-              key={i}
-              src={img}
-              className="w-full rounded-lg cursor-pointer hover:opacity-80 transition"
-              onClick={() => openLightbox(i)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ✅ Lightbox */}
-      {lightboxIndex !== null && (
+      {/* ✅ Lightbox Overlay */}
+      {lightboxIndex !== null && listing.images?.length > 0 && (
         <div className="fixed inset-0 bg-black/80 z-[999] flex items-center justify-center">
           <button
             className="absolute top-5 right-5 text-white text-3xl"
@@ -94,6 +112,7 @@ export default function ListingDetailsPage() {
           <img
             src={listing.images[lightboxIndex]}
             className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg shadow-lg"
+            alt={`Lightbox image ${lightboxIndex + 1}`}
           />
 
           <button
@@ -105,40 +124,73 @@ export default function ListingDetailsPage() {
         </div>
       )}
 
-      {/* ✅ 2-Column Details Layout */}
+      {/* ✅ Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Left / Main Info */}
-        <div className="lg:col-span-2 space-y-6">
-          <h1 className="text-3xl font-bold">{listing.title}</h1>
-          <p className="text-gray-600">{listing.location}</p>
-          <hr />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Description</h2>
-            <p>{listing.description}</p>
+        {/* LEFT: Property Info */}
+        <div className="lg:col-span-2 space-y-10">
+          {/* Overview Section */}
+          <section id="overview" className="py-8 scroll-mt-24">
+            <h2 className="text-2xl font-bold mb-3">Overview</h2>
+            <h1 className="text-3xl font-semibold">{listing.title}</h1>
+            <p className="text-gray-600">{listing.location}</p>
+            <hr className="my-4" />
+            <p>{listing.description || "No description provided."}</p>
           </section>
 
-          <hr />
+          {/* Gallery Section */}
+        {listing.images?.length > 1 && (
+        <section id="gallery" className="py-8 scroll-mt-24">
+            <h2 className="text-2xl font-bold mb-3">Gallery</h2>
+            <div className="columns-2 md:columns-3 gap-3 space-y-3">
+            {listing.images.map((img: string, i: number) => (
+                <div
+                key={i}
+                className="group relative w-full overflow-hidden rounded-lg cursor-pointer"
+                onClick={() => openLightbox(i)}
+                >
+                <img
+                    src={img}
+                    alt={`Gallery image ${i + 1}`}
+                    className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-            <Feature label="Bedrooms" value={listing.bedrooms} />
-            <Feature label="Bathrooms" value={listing.bathrooms} />
-            <Feature label="Size (sqft)" value={listing.size_sqft} />
-            <Feature label="Year Built" value={listing.year_built} />
-          </div>
+                {/* 🔍 Hover Overlay */}
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-white text-3xl mb-1">🔍</span>
+                    <span className="text-white font-semibold text-sm tracking-wide">
+                    View Image
+                    </span>
+                </div>
+                </div>
+            ))}
+            </div>
+        </section>
+        )}
 
-          {/* ✅ Scroll Sections */}
-          <ScrollSection title="Nearby Schools" />
-          <ScrollSection title="Map" />
-          <ScrollSection title="Mortgage Calculator" />
-          <ScrollSection title="Walk Score" />
-          <ScrollSection title="Similar Homes" />
+
+          {/* Map Section */}
+          <section id="map" className="py-8 scroll-mt-24">
+            <h2 className="text-2xl font-bold mb-3">Map</h2>
+            <div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+              🗺️ Map Embed Coming Soon
+            </div>
+          </section>
+
+          {/* Mortgage Calculator Section */}
+          <section id="mortgage" className="py-8 scroll-mt-24">
+            <h2 className="text-2xl font-bold mb-3">Mortgage Calculator</h2>
+            <div className="p-6 bg-gray-100 rounded-lg">
+              <p className="text-gray-600">
+                💰 Coming soon — calculate your monthly payments here.
+              </p>
+            </div>
+          </section>
         </div>
 
-        {/* ✅ Sticky Sidebar */}
-        <aside className="p-6 space-y-6 bg-white rounded-xl shadow-md h-fit sticky top-20">
+        {/* RIGHT: Sticky Sidebar */}
+        <aside className="p-6 space-y-6 bg-white rounded-xl shadow-md h-fit sticky top-20 self-start">
           <p className="text-3xl font-bold text-green-700">
-            ${listing.price?.toLocaleString()}
+            ${listing.price?.toLocaleString() || "N/A"}
           </p>
           <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
             Contact Agent
@@ -154,25 +206,5 @@ export default function ListingDetailsPage() {
         </aside>
       </div>
     </div>
-  );
-}
-
-function Feature({ label, value }: { label: string; value: any }) {
-  return (
-    <div className="bg-gray-100 rounded-lg p-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-semibold">{value ?? "-"}</p>
-    </div>
-  );
-}
-
-function ScrollSection({ title }: { title: string }) {
-  return (
-    <section className="space-y-3 mt-10">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <div className="h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-        Placeholder coming soon...
-      </div>
-    </section>
   );
 }

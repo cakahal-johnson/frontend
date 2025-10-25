@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@source "../src/**/*.{js,jsx,ts,tsx}";
+@source "../components/**/*.{js,jsx,ts,tsx}";
+@source "../app/**/*.{js,jsx,ts,tsx}";
+
+
 @theme {
   /* Define your color variables */
   --color-background: #f9fafb;
@@ -48,5 +53,9 @@ button:hover {
 
 .animate-fadeIn {
   animation: fadeIn .3s ease-in-out;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
