@@ -2,6 +2,7 @@
 import "../styles/globals.css";
 import Navbar from "@/components/Navbar";
 import ClientLayout from "@/components/ClientLayout";
+import { WebSocketProvider } from "@/context/WebSocketContext";
 
 export const metadata = {
   title: "RealEstateHub",
@@ -19,7 +20,7 @@ export default function RootLayout({
         <Navbar />
         <ClientLayout>
           {/* ✅ Properly render page content */}
-          <main className="p-4 max-w-6xl mx-auto">{children}</main>
+          <WebSocketProvider>{children}</WebSocketProvider>
         </ClientLayout>
       </body>
     </html>
