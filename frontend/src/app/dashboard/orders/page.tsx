@@ -1,4 +1,3 @@
-// src/app/dashboard/orders/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,6 +6,8 @@ import Image from "next/image";
 import OrderDetailsModal from "@/components/OrderDetailsModal";
 import StatusBadge from "@/components/StatusBadge";
 import PaymentBadge from "@/components/PaymentBadge";
+import ErrorModal from "@/components/ErrorModal";
+import Toast from "@/components/Toast";
 
 interface OrderListingResponse {
   id: number;
@@ -40,6 +41,19 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [errorModal, setErrorModal] = useState({
+    open: false,
+    title: "",
+    message: "",
+    type: "error" as "error" | "success" | "info",
+  });
+
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "success" as "success" | "info",
+  });
+
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -48,6 +62,12 @@ export default function OrdersPage() {
       setHasMore(res.data.hasMore);
     } catch (error) {
       console.error("Failed to load orders:", error);
+      setErrorModal({
+        open: true,
+        title: "Load Failed",
+        message: "Unable to fetch your orders. Please try again later.",
+        type: "error",
+      });
     }
     setLoading(false);
   };
@@ -62,11 +82,26 @@ export default function OrdersPage() {
         payment_method: "card",
         amount: order.listing?.price || 0,
       });
-      alert("Payment successful!");
-      fetchOrders(); // refresh list & modal
-    } catch (error) {
+
+      // ✅ Show toast success
+      setToast({
+        show: true,
+        message: "Payment successful! 🎉",
+        type: "success",
+      });
+
+      fetchOrders(); // refresh list
+    } catch (error: any) {
       console.error("Payment failed:", error);
-      alert("Payment error");
+      // ⚠️ Show modal error
+      setErrorModal({
+        open: true,
+        title: "Payment Failed",
+        message:
+          error.response?.data?.detail ||
+          "An unexpected error occurred while processing your payment.",
+        type: "error",
+      });
     }
   };
 
@@ -179,12 +214,29 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Order Details Modal */}
       <OrderDetailsModal
         open={isModalOpen}
         onClose={closeModal}
         order={selectedOrder}
         handlePayment={handlePayment}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        open={errorModal.open}
+        onClose={() => setErrorModal({ ...errorModal, open: false })}
+        title={errorModal.title}
+        message={errorModal.message}
+        type={errorModal.type}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
       />
     </div>
   );
