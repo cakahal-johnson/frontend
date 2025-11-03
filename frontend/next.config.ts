@@ -3,12 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-   experimental: {
+  experimental: {
     optimizeCss: true,
   },
   images: {
-    domains: ["via.placeholder.com", "localhost", "127.0.0.1",
-      "zillowrentalsolutions.com"],
+    domains: [
+      "via.placeholder.com",
+      "localhost",
+      "127.0.0.1",
+      "zillowrentalsolutions.com",
+      "images.unsplash.com",
+      "unsplash.com",
+    ],
   },
 };
 
