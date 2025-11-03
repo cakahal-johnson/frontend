@@ -52,6 +52,16 @@ export default function ListingDetailsPage() {
     fetchDetails();
   }, [id]);
 
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+
+
   if (loading) return <p className="text-center py-10">Loading listing...</p>;
   if (!listing) return <p className="text-center py-10">Listing not found.</p>;
 
@@ -68,7 +78,7 @@ export default function ListingDetailsPage() {
       >
         {listing.main_image ? (
           <img
-            src={getImageUrl(listing.main_image)}
+            src={listing.main_image || "/placeholder-house.jpg"}
             alt={listing.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -191,11 +201,15 @@ export default function ListingDetailsPage() {
           <p className="text-3xl font-bold text-green-700">
             ${listing.price?.toLocaleString() || "N/A"}
           </p>
-          <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+          <button
+            onClick={() => setShowContactModal(true)}  // open modal
+            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+          >
             Contact Agent
           </button>
 
-          {/* ✅ Back Button - subtle floating CTA */}
+
+          {/*  Back Button - subtle floating CTA */}
           <button
             onClick={() => window.history.back()}
             className="fixed top-20 left-6 z-[100] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md text-gray-700 dark:text-gray-200 
@@ -208,10 +222,114 @@ export default function ListingDetailsPage() {
             <div className="space-y-2 text-sm mt-4">
               <p className="font-semibold">Agent:</p>
               <p>{listing.agent.name}</p>
-              <p className="text-gray-600">{listing.agent.phone}</p>
+              <a
+                href={`mailto:${listing.agent.email}`}
+                className="block text-blue-600 hover:underline"
+              >
+                {listing.agent.email}
+              </a>
+              <a
+                href={`tel:${listing.agent.phone}`}
+                className="block text-gray-600 hover:underline"
+              >
+                {listing.agent.phone}
+              </a>
             </div>
           )}
+
         </aside>
+        {/* ✅ Contact Modal */}
+        {showContactModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
+            <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-lg relative">
+              <button
+                className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xl"
+                onClick={() => setShowContactModal(false)}
+              >
+                ✖
+              </button>
+
+              <h2 className="text-2xl font-semibold mb-4">Contact Agent</h2>
+              {success ? (
+                <div className="bg-green-100 text-green-800 p-3 rounded-md text-center">
+                  {success}
+                </div>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setSending(true);
+                    try {
+                      const token = localStorage.getItem("token"); // or from context if you use one
+                      await api.post(
+                        "/messages",
+                        {
+                          receiver_id: listing.agent.id,
+                          listing_id: listing.id,
+                          content: formData.message,
+                        },
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
+                      setSuccess("✅ Message sent successfully!");
+                    } catch (err: any) {
+                      console.error(err);
+                      alert("Failed to send message. Please try again.");
+                    } finally {
+                      setSending(false);
+                    }
+                  }}
+
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Your Name</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Your Email</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      required
+                      className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Message</label>
+                    <textarea
+                      value={formData.message}
+                      onChange={(e) =>
+                        setFormData({ ...formData, message: e.target.value })
+                      }
+                      required
+                      rows={4}
+                      className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {sending ? "Sending..." : "Send Message"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

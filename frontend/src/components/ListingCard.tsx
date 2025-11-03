@@ -52,7 +52,7 @@ export default function ListingCard({ listing, favoriteId }: Props) {
 
       {/* Image */}
       <img
-        src={listing.image_url || "/placeholder-house.jpg"}
+        src={listing.main_image || "/placeholder-house.jpg"}
         alt={listing.title}
         className="w-full h-48 object-cover rounded-lg mb-3"
       />
